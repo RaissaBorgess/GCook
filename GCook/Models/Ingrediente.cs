@@ -9,7 +9,7 @@ namespace GCook.Models
     public class Ingrediente
     {
         [Key]
-        public int id { get; set; }
+        public int Id { get; set; }
 
         [Required]
         [StringLength(50)]

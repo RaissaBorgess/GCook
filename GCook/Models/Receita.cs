@@ -31,7 +31,7 @@ namespace GCook.Models;
         public string Preparo { get; set; }
 
         [Required]
-        public int CategoriaID { get; set; }
+        public int CategoriaId { get; set; }
         [ForeignKey("CategoriaId")]
 
         public Categoria Categoria { get; set;  }

@@ -16,4 +16,5 @@ namespace GCook.Models;
         [StringLength(300)]
         public string Foto {get; set; }
         
+        public bool ExibirHome { get; set; } = false;
     }
