@@ -1,11 +1,9 @@
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Threading.Tasks;
+using System.ComponentModel.DataAnnotations.Schema;
 
-namespace GCook.Models
-{
+namespace GCook.Models;
+
+[Table("Ingrediente")]
     public class Ingrediente
     {
         [Key]
@@ -17,4 +15,3 @@ namespace GCook.Models
         
         public ICollection<ReceitaIngrediente> Receitas { get; set; }
     }
-}
