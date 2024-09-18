@@ -21,7 +21,7 @@ public class UsuarioService : IUsuarioService
         _context = context;
         _signInManager = signInManager;
         _userManager = userManager;
-        _httpContextAcessor = httpContextAcessor
+        _httpContextAcessor = httpContextAcessor;
     }
     public Task<UsuarioVM> GetUsuarioLogado()
     {
