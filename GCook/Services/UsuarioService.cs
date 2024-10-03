@@ -11,22 +11,23 @@ using System.Text.Encodings.Web;
 
 
 namespace GCook.Services;
+
 public class UsuarioService : IUsuarioService
 {
     private readonly AppDbContext _contexto;
     private readonly SignInManager<IdentityUser> _signInManager;
     private readonly UserManager<IdentityUser> _userManager;
-    private readonly  IHttpContextAccessor  _httpContextAcessor;
-    private readonly  IUserStore<IdentityUser>  userStore;
-    private readonly  IUserEmailStore<IdentityUser>  emailStore;
-    private readonly  IWebHostEnvironment _hostEnvironment;
-    private readonly  IEmailSender _emailSender;
-    private readonly  ILogger<UsuarioService> _logger; 
+    private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly IUserStore<IdentityUser> _userStore;
+    private readonly IUserEmailStore<IdentityUser> _emailStore;
+    private readonly IWebHostEnvironment _hostEnvironment;
+    private readonly IEmailSender _emailSender;
+    private readonly ILogger<UsuarioService> _logger;
 
 
 
     public UsuarioService(
-        AppDbContext contexto, 
+        AppDbContext contexto,
         SignInManager<IdentityUser> signInManager,
         UserManager<IdentityUser> userManager,
         IHttpContextAccessor httpContextAcessor,
@@ -39,7 +40,7 @@ public class UsuarioService : IUsuarioService
         _contexto = contexto;
         _signInManager = signInManager;
         _userManager = userManager;
-        _httpContextAcessor = httpContextAcessor;
+        _httpContextAccessor = httpContextAcessor;
         _userStore = userStore;
         _emailStore = (IUserEmailStore<IdentityUser>)_userStore;
         _hostEnvironment = hostEnvironment;
@@ -47,9 +48,9 @@ public class UsuarioService : IUsuarioService
         _logger = logger;
 
     }
-    public async Task<bool> ConfirmarEmail(string userId, string code) 
-  
-    { 
+    public async Task<bool> ConfirmarEmail(string userId, string code)
+
+    {
         var user = await _userManager.FindByIdAsync(userId);
         if (user == null)
         {
@@ -59,60 +60,60 @@ public class UsuarioService : IUsuarioService
         var result = await _userManager.ConfirmEmailAsync(user, code);
         return result.Succeeded;
     }
-  
 
-public async Task<UsuarioVM> GetUsuarioLogado()
-{
-    var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-    if (userId == null)
+
+    public async Task<UsuarioVM> GetUsuarioLogado()
     {
-        return null;
-    }
-
-    var userAccount = await _userManager.FindByIdAsync(userId);
-    var usuario = await _contexto.Usuarios.Where(u => u.UsuarioId == userId).SingleOrDefaultAsync();
-    var perfis = string.Join(",", await _userManager.GetRolesAsync(userAccount));
-    var admin = await _userManager.IsInRoleAsync(userAccount, "Administrador");
-    UsuarioVM usuarioVM = new()
-
-    {
-        UsuarioId = userId,
-        Nome = usuario.Nome,
-        DataNascimento = usuario.DataNascimento,
-        Foto = usuario.Foto,
-        Email = userAccount.Email,
-        UserName = userAccount.UserName,
-        Perfil = perfis,
-        IsAdmin = admin
-    };
-
-    return usuarioVM;
-}
-
-public async Task<SignInResult> LoginUsuario(LoginVM login)
-{
-    string userName = login.Email;
-    if (Helper.IsValidEmail(login.Email))
-    {
-        var user = await _userManager.FindByEmailAsync(login.Email);
-        if (user != null)
+        var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userId == null)
         {
-            userName = user.UserName;
+            return null;
         }
+
+        var userAccount = await _userManager.FindByIdAsync(userId);
+        var usuario = await _contexto.Usuarios.Where(u => u.UsuarioId == userId).SingleOrDefaultAsync();
+        var perfis = string.Join(",", await _userManager.GetRolesAsync(userAccount));
+        var admin = await _userManager.IsInRoleAsync(userAccount, "Administrador");
+        UsuarioVM usuarioVM = new()
+
+        {
+            UsuarioId = userId,
+            Nome = usuario.Nome,
+            DataNascimento = usuario.DataNascimento,
+            Foto = usuario.Foto,
+            Email = userAccount.Email,
+            UserName = userAccount.UserName,
+            Perfil = perfis,
+            IsAdmin = admin
+        };
+
+        return usuarioVM;
     }
 
-    var result = await _signInManager.PasswordSignInAsync(
-        userName, login.Senha, login.Lembrar, lockoutOnFailure: true
-    );
+    public async Task<SignInResult> LoginUsuario(LoginVM login)
+    {
+        string userName = login.Email;
+        if (Helper.IsValidEmail(login.Email))
+        {
+            var user = await _userManager.FindByEmailAsync(login.Email);
+            if (user != null)
+            {
+                userName = user.UserName;
+            }
+        }
 
-    if (result.Succeeded)
-        _logger.LogInformation($"Usuario {login.Email} acessou o sistema.");
-    
-    if (result.IsLockedOut)
-        _logger.LogWarning($"Usuario {login.Email} está bloqueado");
+        var result = await _signInManager.PasswordSignInAsync(
+            userName, login.Senha, login.Lembrar, lockoutOnFailure: true
+        );
+
+        if (result.Succeeded)
+            _logger.LogInformation($"Usuario {login.Email} acessou o sistema.");
+
+        if (result.IsLockedOut)
+            _logger.LogWarning($"Usuario {login.Email} está bloqueado");
 
         return result;
-}
+    }
 
     public async Task LogoffUsuario()
     {
@@ -129,9 +130,9 @@ public async Task<SignInResult> LoginUsuario(LoginVM login)
         var result = await _userManager.CreateAsync(user, registro.Senha);
 
         if (result.Succeeded)
-        {   
+        {
             _logger.LogInformation($"Novo usuario registrado com o email {user.Email}.");
-            
+
             var userId = await _userManager.GetUserIdAsync(user);
             var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
             code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
@@ -141,43 +142,41 @@ public async Task<SignInResult> LoginUsuario(LoginVM login)
 
             await _emailSender.SendEmailAsync(registro.Email, "GCook - Criação de Conta", GetConfirmEmailHtml(HtmlEncoder.Default.Encode(url)));
 
-        }
-    
-    //Cria a conta pessoal do usuário
-    Usuario usuario = new()
-    {
-        UsuarioId = userId,
-        DataNascimento = RegistroVM.DataNascimento ?? DateTime.Now,
-        Nome = Registro.Nome
-    };
-    if (registro.Foto != null)
-    {
-        string fileName = userId + Path.GetExtension(registro.Foto.FileName);
-        string uploads = Path.Combine(_hostEnvironment.WebRootPath, @"img\usuarios");
-        string newFile = Path.Combine(uploads, fileName);
-        using (var stream = new FileStream(newFile, FileMode.Create))
+            //Cria a conta pessoal do usuário
+            Usuario usuario = new()
+            {
+                UsuarioId = userId,
+                DataNascimento = registro.DataNascimento ?? DateTime.Now,
+                Nome = registro.Nome
+            };
 
+            if (registro.Foto != null)
+            {
+                string fileName = userId + Path.GetExtension(registro.Foto.FileName);
+                string uploads = Path.Combine(_hostEnvironment.WebRootPath, @"img\usuarios");
+                string newFile = Path.Combine(uploads, fileName);
+                using (var stream = new FileStream(newFile, FileMode.Create))
+
+                {
+                    registro.Foto.CopyTo(stream);
+                }
+                usuario.Foto = @"\img\usuarios\" + fileName;
+            }
+
+            _contexto.Add(usuario);
+            await _contexto.SaveChangesAsync();
+
+            return null;
+        }
+
+        List<string> errors = new();
+        foreach (var error in result.Errors)
         {
-            registro.Foto.CopyTo(stream);
+            errors.Add(TranslateIdentityErrors.TranslateErrorMessage(error.Code));
         }
-        usuario.Foto = @"\img\usuarios\" + fileName;
 
-    _contexto.Add(usuario);
-    await _contexto.SaveChangesAsync();
-
-    return null;
+        return errors;
     }
-
-    List<string> errors = new();
-    foreach (var error in result.Errors)
-    {
-        errors.Add(TranslateIdentityErrors.TranslateErrorMessage(error.Code));
-    }
-    
-    return errors;
-}
-}
-
 
     private string GetConfirmEmailHtml(string url)
     {
@@ -439,3 +438,4 @@ public async Task<SignInResult> LoginUsuario(LoginVM login)
         ";
         return email;
     }
+}

@@ -29,7 +29,7 @@ public class RegistroVM
     [DataType(DataType.Password)]
     [Display(Name = "Confirmar Senha de Acesso", Prompt = "Confirme sua Senha de Acesso")]
     [Compare("Senha", ErrorMessage = "As Senhas não Conferem.")]
-    public string ConfirmarSenha { get; set; }
+    public string ConfirmacaoSenha { get; set; }
 
     public IFormFile Foto { get; set; }
 
