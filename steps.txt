@@ -1,0 +1,13 @@
+gerar codigo Crude
+dotnet-asp-codegenerator
+
+gerar controller
+dotnet tool install
+dotnet tool install --global dotnet-aspnet-codegenerator --version 8.0.6
+
+pacotes a instalar:
+Microsoft.VisualStudio.Web.CodeGeneration.Design
+Microsoft.EntityFrameworkCore.SqlServer
+
+gerar controller e Views de CRUD:
+    dotnet-aspnet-codegenerator controller -name CategoriasController -m Categoria -dc AppDbContext -l "~/Views/Shared/_LayoutAdmin.cshtml" -outDir Controllers
