@@ -13,11 +13,14 @@ namespace GCook.Controllers
     public class CategoriasController : Controller
     {
         private readonly AppDbContext _context;
+        private readonly IWebHostEnvironment _host;
 
-        public CategoriasController(AppDbContext context)
+        public CategoriasController(AppDbContext context, IWebHostEnvironment host)
         {
             _context = context;
+            _host = host;
         }
+        
 
         // GET: Categorias
         public async Task<IActionResult> Index()
@@ -54,12 +57,26 @@ namespace GCook.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Nome,Foto,ExibirHome")] Categoria categoria)
+        public async Task<IActionResult> Create([Bind("Id,Nome,Foto,ExibirHome")] Categoria categoria, IFormFile Foto)
         {
             if (ModelState.IsValid)
             {
                 _context.Add(categoria);
                 await _context.SaveChangesAsync();
+
+                if (Foto != null)
+                {
+                    string arquivo = categoria.Id + Path.GetExtension(Foto.FileName);
+                    string caminho = Path.Combine(_host.WebRootPath, "img/categorias");
+                    string novoArquivo = Path.Combine(caminho, arquivo);
+                    using (FileStream stream = new(novoArquivo, FileMode.Create))
+                    {
+                        Foto.CopyTo(stream);
+                    }
+                    categoria.Foto = "img/categorias/" + arquivo;
+                    await _context.SaveChangesAsync();
+
+                }
                 return RedirectToAction(nameof(Index));
             }
             return View(categoria);
